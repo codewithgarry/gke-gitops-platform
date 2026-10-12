@@ -1,0 +1,55 @@
+image:
+  repository: us-docker.pkg.dev/google-samples/containers/gke/hello-app
+  tag: "2.0"
+  pullPolicy: IfNotPresent
+
+containerPort: 8080
+
+# Ignored when autoscaling is enabled. The HPA owns the replica count.
+replicaCount: 2
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ""          # empty = match any host (use the ingress IP); set a DNS name in real use
+  path: /
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi   # no CPU limit to avoid throttling; requests drive scheduling and HPA
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# Spread replicas across nodes so one node failure does not take the service down.
+topologySpread:
+  enabled: true
+  maxSkew: 1

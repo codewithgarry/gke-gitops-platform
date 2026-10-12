@@ -1,0 +1,8 @@
+# Minimal Argo CD install for a single-team platform.
+dex:
+  enabled: false          # local admin only for the demo; use SSO (OIDC) in real use
+notifications:
+  enabled: false
+server:
+  service:
+    type: ClusterIP       # reach the UI with kubectl port-forward

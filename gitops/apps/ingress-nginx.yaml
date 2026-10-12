@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-nginx
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"   # platform first, apps after
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    chart: ingress-nginx
+    targetRevision: 4.11.3
+    helm:
+      valuesObject:
+        controller:
+          replicaCount: 2
+          service:
+            type: LoadBalancer
+            externalTrafficPolicy: Local   # preserve client source IPs
+          metrics:
+            enabled: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
